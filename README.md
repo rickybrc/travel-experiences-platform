@@ -28,7 +28,6 @@ It connects product data import, spreadsheet operations, static JSON generation,
 - External API integrations
 - Gemini API
 
-```md
 ## Repository Structure
 
 The repository is organized into two main layers: backend automation in Google Apps Script and frontend presentation for the embeddable experience widget.
