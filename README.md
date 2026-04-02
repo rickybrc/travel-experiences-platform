@@ -28,6 +28,27 @@ It connects product data import, spreadsheet operations, static JSON generation,
 - External API integrations
 - Gemini API
 
+## Repository Structure
+
+```md
+The repository is organized into two main layers: backend automation in Google Apps Script and frontend presentation for the embeddable experience widget.
+
+```bash
+travel-experiences-platform/
+├── apps-script/
+│   └── main.gs            # Google Apps Script backend: supplier sync, image enrichment, cache layer, JSON API
+├── frontend/
+│   └── widget.html        # Frontend widget with filters, pagination, modal, and URL state
+├── README.md              # Project overview, architecture, setup notes, and screenshots
+├── screenshot-city-page.png
+├── screenshot-platform.png
+└── screenshot-product-popup.png
+
+Folder overview
+	•	apps-script/ — Handles product import from supplier API, spreadsheet sync, progress tracking, image enrichment, caching, and JSON output.
+	•	frontend/ — Contains the embeddable marketplace widget used on the website.
+	•	screenshots — Visual proof of the product listing UI, city landing pages, and product popup experience.
+
 ## Results
 
 - 12500+ experiences imported
