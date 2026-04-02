@@ -44,12 +44,12 @@ travel-experiences-platform/
 ├── screenshot-city-page.png
 ├── screenshot-platform.png
 └── screenshot-product-popup.png
+```
 
 Folder overview
 	•	apps-script/ — Handles product import from supplier API, spreadsheet sync, progress tracking, image enrichment, caching, and JSON output.
 	•	frontend/ — Contains the embeddable marketplace widget used on the website.
 	•	screenshots — Visual proof of the product listing UI, city landing pages, and product popup experience.
-```
 
 ## Results
 
