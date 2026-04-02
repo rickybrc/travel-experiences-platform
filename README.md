@@ -39,3 +39,15 @@ It connects product data import, spreadsheet operations, static JSON generation,
 ## Status
 
 This repository is a sanitized portfolio version of a real-world project. Sensitive credentials, tokens, and internal business logic have been removed.
+
+## Screenshots
+
+### Product listing
+![Product listing](./screenshot-platform.png)
+
+### City page
+![City page](./screenshot-city-page.png)
+
+### Product popup
+![Product popup](./screenshot-product-popup.png)
+
