@@ -1,3 +1,767 @@
-<!-- Sanitized portfolio version -->
-<!-- Frontend widget used to render and filter travel experiences -->
-<!-- Production implementation not fully included in this public repository -->
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Marcellus&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap');
+
+  #tiqets-app * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'PT Serif', serif; }
+
+  #tiqets-filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr auto auto;
+    gap: 12px;
+    margin-bottom: 32px;
+    align-items: center;
+    width: 100%;
+  }
+  @media (max-width: 1100px) { #tiqets-filters { grid-template-columns: 1fr 1fr 1fr; } }
+  @media (max-width: 768px)  { #tiqets-filters { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px)  { #tiqets-filters { grid-template-columns: 1fr; } }
+
+  #tiqets-filters input,
+  #tiqets-filters select {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+    font-family: 'PT Serif', serif;
+    color: #2D2D2A;
+    background: #fff;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  #tiqets-filters input:focus,
+  #tiqets-filters select:focus { border-color: #E88E02; }
+
+  #btn-search {
+    padding: 13px 26px;
+    background: #E88E02;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-family: 'PT Serif', serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+  #btn-search:hover { background: #c97a02; }
+
+  #btn-reset {
+    padding: 13px 20px;
+    background: #fff;
+    color: #2D2D2A;
+    border: 1.5px solid #ddd;
+    border-radius: 6px;
+    font-family: 'PT Serif', serif;
+    font-size: 14px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  #btn-reset:hover { border-color: #E88E02; color: #E88E02; }
+
+  #tiqets-count {
+    font-family: 'PT Serif', serif;
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 20px;
+  }
+
+  #tiqets-loading {
+    text-align: center;
+    padding: 60px 0;
+    color: #888;
+    font-family: 'PT Serif', serif;
+    font-size: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .tq-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f0f0f0;
+    border-top: 3px solid #E88E02;
+    border-radius: 50%;
+    animation: tq-spin 0.8s linear infinite;
+  }
+
+  @keyframes tq-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  #tiqets-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    align-items: stretch;
+  }
+  @media (max-width: 1100px) { #tiqets-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 768px)  { #tiqets-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px)  { #tiqets-grid { grid-template-columns: 1fr; } }
+
+  .tq-card {
+    font-family: 'PT Serif', serif;
+    color: #2D2D2A;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.25s, transform 0.25s;
+    cursor: pointer;
+  }
+  .tq-card:hover {
+    box-shadow: 0 6px 24px rgba(0,0,0,0.10);
+    transform: translateY(-3px);
+  }
+
+  .tq-card-img {
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+    display: block;
+    background: #f5f5f5;
+  }
+  .tq-card-img-placeholder {
+    width: 100%;
+    height: 190px;
+    background: linear-gradient(135deg, #F0CD5F22 0%, #E88E0222 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: #E88E02;
+  }
+
+  #tiqets-app .tq-card-body {
+    padding: 16px 20px 0px 20px !important;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 0;
+  }
+
+  .tq-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 12px 0px 14px 0px;
+    margin-top: auto;
+  }
+
+  .tq-rating {
+    font-size: 13px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'PT Serif', serif;
+  }
+
+  .tq-reviews { color: #aaa; font-size: 12px; }
+  .tq-price-block { text-align: right; }
+
+  .tq-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    color: #E88E02;
+    font-size: 11px;
+    font-family: 'PT Serif', serif;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 0;
+    margin-bottom: 10px;
+  }
+
+  .tq-badge-link {
+    text-decoration: none;
+    color: inherit;
+    display: inline-flex;
+    align-items: center;
+  }
+  .tq-badge-link span { cursor: pointer; }
+  .tq-badge-link:hover span { color: #4277B0; }
+
+  .tq-card-title {
+    font-family: 'Marcellus', serif;
+    font-size: 17px;
+    font-weight: 400;
+    color: #2D2D2A;
+    margin-bottom: 10px;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .tq-price-from {
+    font-family: 'PT Serif', serif;
+    font-size: 11px;
+    color: #999;
+    display: block;
+    text-align: right;
+    margin-bottom: 1px;
+  }
+  .tq-price {
+    font-family: 'Marcellus', serif;
+    font-size: 24px;
+    color: #2D2D2A;
+    line-height: 1;
+    display: block;
+    text-align: right;
+  }
+
+  #tiqets-app .tq-btn {
+    display: block;
+    margin: 14px 0px 14px 0px !important;
+    text-align: center;
+    background: #4277B0;
+    color: #fff;
+    padding: 15px 16px !important;
+    border-radius: 6px;
+    text-decoration: none;
+    font-family: 'PT Serif', serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    transition: background 0.2s;
+  }
+  #tiqets-app .tq-btn:hover { background: #335f8e; }
+
+  #tiqets-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-top: 48px;
+    flex-wrap: wrap;
+  }
+  .tq-page-btn {
+    min-width: 42px;
+    height: 42px;
+    padding: 0 14px;
+    border: 1.5px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    font-family: 'PT Serif', serif;
+    font-size: 14px;
+    color: #2D2D2A;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .tq-page-btn:hover { border-color: #E88E02; color: #E88E02; background: #fff8f0; }
+  .tq-page-btn.active { background: #E88E02; color: #fff; border-color: #E88E02; font-weight: 700; }
+  .tq-page-btn.nav { padding: 0 18px; font-size: 13px; color: #4277B0; border-color: #4277B0; font-weight: 700; }
+  .tq-page-btn.nav:hover { background: #4277B0; color: #fff; border-color: #4277B0; }
+  .tq-page-ellipsis { font-size: 16px; color: #bbb; padding: 0 4px; line-height: 42px; }
+
+  #tq-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 999999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #tq-modal-box {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 860px;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: row;
+    position: relative;
+  }
+  #tq-modal-img {
+    width: 45%;
+    object-fit: cover;
+    flex-shrink: 0;
+    max-height: 90vh;
+  }
+  #tq-modal-content {
+    padding: 36px 32px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+  }
+  #tq-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: #888;
+    z-index: 10;
+    line-height: 1;
+  }
+  #tq-modal-close:hover { color: #2D2D2A; }
+  #tq-modal-badge {
+    font-family: 'PT Serif', serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #E88E02;
+    margin-bottom: 12px;
+  }
+  #tq-modal-title {
+    font-family: 'Marcellus', serif;
+    font-size: 22px;
+    color: #2D2D2A;
+    line-height: 1.4;
+    margin-bottom: 16px;
+  }
+  #tq-modal-desc {
+    font-family: 'PT Serif', serif;
+    font-size: 14px;
+    color: #666;
+    line-height: 1.65;
+    flex: 1;
+    margin-bottom: 24px;
+  }
+  #tq-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+  }
+  #tq-modal-rating {
+    font-family: 'PT Serif', serif;
+    font-size: 13px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  #tq-modal-price-block { text-align: right; }
+  #tq-modal-price-from {
+    font-family: 'PT Serif', serif;
+    font-size: 11px;
+    color: #999;
+    display: block;
+  }
+  #tq-modal-price {
+    font-family: 'Marcellus', serif;
+    font-size: 28px;
+    color: #2D2D2A;
+    line-height: 1;
+  }
+  #tq-modal-btn {
+    display: block;
+    text-align: center;
+    background: #4277B0;
+    color: #fff;
+    padding: 15px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-family: 'PT Serif', serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    transition: background 0.2s;
+  }
+  #tq-modal-btn:hover { background: #335f8e; }
+
+  @media (max-width: 640px) {
+    #tq-modal-box { flex-direction: column; max-height: 95vh; }
+    #tq-modal-img { width: 100%; height: 200px; max-height: 200px; }
+    #tq-modal-content { padding: 20px; }
+  }
+</style>
+
+<div id="tiqets-app">
+  <div id="tiqets-filters">
+    <input type="text" id="filter-q" placeholder="🔍 Search experiences..." />
+    <select id="filter-country" onchange="onCountryChange()">
+      <option value="">🌍 All countries</option>
+    </select>
+    <select id="filter-city">
+      <option value="">🏙 All cities</option>
+    </select>
+    <select id="filter-sort">
+      <option value="">↕ Sort by</option>
+      <option value="price-asc">💶 Price: Low to High</option>
+      <option value="price-desc">💶 Price: High to Low</option>
+      <option value="rating-asc">⭐ Rating: Low to High</option>
+      <option value="rating-desc">⭐ Rating: High to Low</option>
+    </select>
+    <button id="btn-search" onclick="applyFilters()">Search</button>
+    <button id="btn-reset" onclick="resetFilters()">✕ Reset</button>
+  </div>
+
+  <div id="tiqets-count"></div>
+  <div id="tiqets-loading"><div class="tq-spinner"></div>Loading the best experiences for you… 🎟</div>
+  <div id="tiqets-grid"></div>
+  <div id="tiqets-pagination"></div>
+
+  <div id="tq-modal-overlay" onclick="closeModal()">
+    <div id="tq-modal-box" onclick="event.stopPropagation()">
+      <button id="tq-modal-close" onclick="closeModal()">✕</button>
+      <img id="tq-modal-img" src="" alt="">
+      <div id="tq-modal-content">
+        <div id="tq-modal-badge"></div>
+        <div id="tq-modal-title"></div>
+        <div id="tq-modal-desc"></div>
+        <div id="tq-modal-footer">
+          <div id="tq-modal-rating"></div>
+          <div id="tq-modal-price-block">
+            <span id="tq-modal-price-from">From</span>
+            <span id="tq-modal-price"></span>
+          </div>
+        </div>
+        <a id="tq-modal-btn" href="" target="_blank" rel="noopener noreferrer">Check Availability →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SHEET_API_URL = ‘YOUR_SHEET_API_URL‘;
+  const PAGE_SIZE = 12;
+
+  function normalizeProduct(p) {
+  return {
+    titolo:      (p.Titolo || p.titolo || '').trim(),
+    descrizione: (p.Descrizione || p.descrizione || '').trim(),
+    prezzo:      p.Prezzo || p.prezzo || 0,
+    immagine:    (p.Immagine || p.immagine || '').trim(),
+    link:        (p['Link Checkout'] || p.link || '').trim(),
+    rating:      p.Rating || p.rating || '',
+    reviews:     p.Recensioni || p.reviews || '',
+    citta:       (p.Città || p.citta || '').trim(),
+    paese:       (p.Paese || p.paese || '').trim(),
+    categoria:   (p.Venue || p.categoria || '').trim(),
+  };
+}
+
+  function pushURLState(modalIndex = null) {
+    if (isInitialLoad) return;
+    const params  = new URLSearchParams();
+    const q       = document.getElementById('filter-q').value.trim();
+    const country = document.getElementById('filter-country').value;
+    const city    = document.getElementById('filter-city').value;
+    const sort    = document.getElementById('filter-sort').value;
+
+    if (q)                     params.set('q', q);
+    if (country)               params.set('country', country);
+    if (city)                  params.set('city', city);
+    if (sort)                  params.set('sort', sort);
+    if (currentPage > 1)       params.set('page', currentPage);
+    if (modalIndex !== null)   params.set('product', modalIndex);
+
+    const newURL = params.toString()
+      ? `${window.location.pathname}?${params.toString()}`
+      : window.location.pathname;
+
+    window.history.pushState({ modalIndex }, '', newURL);
+  }
+
+  function readURLParams() {
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get('q'))       document.getElementById('filter-q').value       = params.get('q');
+    if (params.get('country')) document.getElementById('filter-country').value = params.get('country');
+    if (params.get('sort'))    document.getElementById('filter-sort').value    = params.get('sort');
+
+    // Popola città in base al paese selezionato dall'URL, poi imposta la città
+    if (params.get('country')) populateCities(params.get('country'));
+    if (params.get('city'))    document.getElementById('filter-city').value = params.get('city');
+    if (params.get('page'))    currentPage = parseInt(params.get('page')) || 1;
+
+    if (params.get('product') !== null) {
+      const idx = parseInt(params.get('product'));
+      if (!isNaN(idx)) pendingModalIndex = idx;
+    }
+
+    isInitialLoad = true;
+    applyFilters();
+    isInitialLoad = false;
+  }
+
+  window.addEventListener('popstate', () => {
+    const params = new URLSearchParams(window.location.search);
+
+    document.getElementById('filter-q').value       = params.get('q')       || '';
+    document.getElementById('filter-country').value = params.get('country') || '';
+    document.getElementById('filter-sort').value    = params.get('sort')    || '';
+
+    populateCities(params.get('country') || '');
+    document.getElementById('filter-city').value = params.get('city') || '';
+    currentPage = parseInt(params.get('page')) || 1;
+
+    if (params.get('product') !== null) {
+      const idx = parseInt(params.get('product'));
+      if (!isNaN(idx)) pendingModalIndex = idx;
+    } else {
+      document.getElementById('tq-modal-overlay').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    isInitialLoad = true;
+    applyFilters();
+    isInitialLoad = false;
+  });
+
+  document.body.appendChild(document.getElementById('tq-modal-overlay'));
+
+  async function loadProducts() {
+  try {
+    const res = await fetch(SHEET_API_URL);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    allProducts = (json.products || []).map(normalizeProduct);
+    populateCountries();
+    populateCities('');
+    readURLParams();
+  } catch (e) {
+    document.getElementById('tiqets-loading').innerHTML = '❌ Error loading products. Please try again later.';
+  }
+}
+
+  async function loadRemaining() {
+    try {
+      await new Promise(r => setTimeout(r, 200));
+      const res  = await fetch(SHEET_API_URL);
+      const json = await res.json();
+      allProducts = (json.products || []).map(normalizeProduct);
+      const currentCountry = document.getElementById('filter-country').value;
+      const currentCity    = document.getElementById('filter-city').value;
+      populateCountries();
+      populateCities(currentCountry);
+      if (currentCity) document.getElementById('filter-city').value = currentCity;
+      isInitialLoad = true;
+      applyFilters();
+      isInitialLoad = false;
+    } catch (e) {
+      console.warn('Background load failed:', e);
+    }
+  }
+
+  function populateCountries() {
+    const countries  = [...new Set(allProducts.map(p => p.paese).filter(Boolean))].sort();
+    const sel        = document.getElementById('filter-country');
+    const currentVal = sel.value;
+    sel.innerHTML    = '<option value="">🌍 All countries</option>';
+    countries.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      sel.appendChild(opt);
+    });
+    if (currentVal) sel.value = currentVal;
+  }
+
+  // ← funzione separata, usata ovunque serve popolare le città
+  function populateCities(country) {
+    const citySel    = document.getElementById('filter-city');
+    const currentVal = citySel.value;
+    citySel.innerHTML = '<option value="">🏙 All cities</option>';
+    const cities = [...new Set(
+      allProducts
+        .filter(p => !country || p.paese.trim() === country.trim())
+        .map(p => p.citta)
+        .filter(Boolean)
+    )].sort();
+    cities.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      citySel.appendChild(opt);
+    });
+    if (currentVal) citySel.value = currentVal;
+  }
+
+  function onCountryChange() {
+    const country = document.getElementById('filter-country').value.trim();
+    populateCities(country);
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const q       = document.getElementById('filter-q').value.toLowerCase().trim();
+    const country = document.getElementById('filter-country').value.trim();
+    const city    = document.getElementById('filter-city').value.trim();
+    const sort    = document.getElementById('filter-sort').value;
+
+    filteredProducts = allProducts.filter(p => {
+      if (q && !p.titolo?.toLowerCase().includes(q) && !p.descrizione?.toLowerCase().includes(q)) return false;
+      if (country && p.paese.trim() !== country) return false;
+      if (city    && p.citta.trim() !== city)    return false;
+      return true;
+    });
+
+    if (sort === 'price-asc')   filteredProducts.sort((a, b) => parseFloat(a.prezzo||0) - parseFloat(b.prezzo||0));
+    if (sort === 'price-desc')  filteredProducts.sort((a, b) => parseFloat(b.prezzo||0) - parseFloat(a.prezzo||0));
+    if (sort === 'rating-asc')  filteredProducts.sort((a, b) => parseFloat(a.rating||0) - parseFloat(b.rating||0));
+    if (sort === 'rating-desc') filteredProducts.sort((a, b) => parseFloat(b.rating||0) - parseFloat(a.rating||0));
+
+    currentPage = 1;
+    renderGrid();
+    renderPagination();
+    pushURLState();
+  }
+
+  function resetFilters() {
+    document.getElementById('filter-q').value       = '';
+    document.getElementById('filter-country').value = '';
+    document.getElementById('filter-city').value    = '';
+    document.getElementById('filter-sort').value    = '';
+    populateCities('');
+    applyFilters();
+  }
+
+  function renderGrid() {
+    const grid    = document.getElementById('tiqets-grid');
+    const loading = document.getElementById('tiqets-loading');
+    const count   = document.getElementById('tiqets-count');
+
+    loading.style.display = 'none';
+    count.textContent = `${filteredProducts.length} experience${filteredProducts.length !== 1 ? 's' : ''} available`;
+
+    const start     = (currentPage - 1) * PAGE_SIZE;
+    const paginated = filteredProducts.slice(start, start + PAGE_SIZE);
+
+    if (paginated.length === 0) {
+      grid.innerHTML = '<p style="color:#888;font-family:PT Serif,serif;font-size:14px;">No experiences available. Try adjusting your filters.</p>';
+      pendingModalIndex = null;
+      return;
+    }
+
+    grid.innerHTML = paginated.map((p, i) => {
+      const citySlug = p.citta
+        ? p.citta.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+        : '';
+      const cityUrl = citySlug ? `https://experiences.group-getaways.com/${citySlug}` : '';
+
+      const imageBlock = p.immagine
+        ? `<img class="tq-card-img" src="${p.immagine}" alt="${p.titolo}" loading="lazy"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+           <div class="tq-card-img-placeholder" style="display:none">🎟</div>`
+        : `<div class="tq-card-img-placeholder">🎟</div>`;
+
+      // Badge: sempre visibile, con link alla city page se disponibile
+      const badgeInner = p.citta
+        ? (cityUrl
+            ? `<a class="tq-badge-link" href="${cityUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()"><span>${p.citta.toUpperCase()}</span></a>`
+            : `<span>${p.citta.toUpperCase()}</span>`)
+        : '';
+      const badgeBlock = `<div class="tq-badge">${badgeInner}</div>`;
+
+      return `
+        <div class="tq-card" onclick="openModal(${start + i})">
+          ${imageBlock}
+          <div class="tq-card-body">
+            ${badgeBlock}
+            <div class="tq-card-title">${p.titolo || 'Untitled'}</div>
+            <div class="tq-card-footer">
+              <div class="tq-rating">
+                <span style="font-size:14px">⭐</span>
+                <strong>${p.rating || 'N/A'}</strong>
+                ${p.reviews ? `<span class="tq-reviews">(${Number(p.reviews).toLocaleString()})</span>` : ''}
+              </div>
+              <div class="tq-price-block">
+                <span class="tq-price-from">From</span>
+                <span class="tq-price">€${parseFloat(p.prezzo || 0).toFixed(2)}</span>
+              </div>
+            </div>
+            ${p.link ? `<a class="tq-btn" href="${p.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Check Availability →</a>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+
+    if (pendingModalIndex !== null) {
+      const idx = pendingModalIndex;
+      pendingModalIndex = null;
+      setTimeout(() => {
+        document.getElementById('tiqets-app').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(() => openModal(idx, false), 400);
+      }, 50);
+    }
+  }
+
+  function openModal(index, updateURL = true) {
+    const p = filteredProducts[index];
+    if (!p) return;
+
+    document.getElementById('tq-modal-img').src           = p.immagine || '';
+    document.getElementById('tq-modal-img').alt           = p.titolo   || '';
+    document.getElementById('tq-modal-badge').textContent = p.citta ? p.citta.toUpperCase() : '';
+    document.getElementById('tq-modal-title').textContent = p.titolo || '';
+    document.getElementById('tq-modal-desc').textContent  = p.descrizione || '';
+    document.getElementById('tq-modal-rating').innerHTML  =
+      `<span>⭐</span> <strong>${p.rating || 'N/A'}</strong>
+       ${p.reviews ? `<span style="color:#aaa;font-size:12px">(${Number(p.reviews).toLocaleString()})</span>` : ''}`;
+    document.getElementById('tq-modal-price').textContent = `€${parseFloat(p.prezzo || 0).toFixed(2)}`;
+    document.getElementById('tq-modal-btn').href          = p.link || '#';
+
+    document.getElementById('tq-modal-overlay').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    if (updateURL) pushURLState(index);
+  }
+
+  function closeModal() {
+    document.getElementById('tq-modal-overlay').style.display = 'none';
+    document.body.style.overflow = '';
+    pushURLState();
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  function renderPagination() {
+    const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE);
+    const container  = document.getElementById('tiqets-pagination');
+    if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+    let html = '';
+    if (currentPage > 1)
+      html += `<button class="tq-page-btn nav" onclick="goToPage(${currentPage - 1})">← Prev</button>`;
+
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+        html += `<button class="tq-page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+      } else if (i === currentPage - 3 || i === currentPage + 3) {
+        html += `<span class="tq-page-ellipsis">…</span>`;
+      }
+    }
+
+    if (currentPage < totalPages)
+      html += `<button class="tq-page-btn nav" onclick="goToPage(${currentPage + 1})">Next →</button>`;
+
+    container.innerHTML = html;
+  }
+
+  function goToPage(page) {
+    currentPage = page;
+    renderGrid();
+    renderPagination();
+    document.getElementById('tiqets-app').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  document.getElementById('tiqets-filters').addEventListener('keydown', e => { if (e.key === 'Enter') applyFilters(); });
+  document.getElementById('filter-city').addEventListener('change', applyFilters);
+  document.getElementById('filter-sort').addEventListener('change', applyFilters);
+
+  loadProducts();
+</script>
